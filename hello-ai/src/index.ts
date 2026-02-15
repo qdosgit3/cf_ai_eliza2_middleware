@@ -10,6 +10,36 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+import { DurableObject } from "cloudflare:workers";
+
+
+export class MyDurableObject extends DurableObject<Env> {
+  constructor(ctx: DurableObjectState, env: Env) {
+    // Required, as we're extending the base class.
+    super(ctx, env)
+  }
+
+	async add_history(): Promise<string> {
+	    let result = this.ctx.storage.sql
+		.exec("SELECT 'Hello, World!' as greeting")
+
+	    console.log(result)
+	    
+	    return result.greeting;
+	}
+
+	async lookup_history(): Promise<string> {
+	    let result = this.ctx.storage.sql
+		.exec("SELECT 'Hello, World!' as greeting")
+	    return result.greeting;
+	}
+
+
+}
+
+
+
+
 
 export interface Env {
     // If you set another name in the Wrangler config file as the value for 'binding',
@@ -18,13 +48,14 @@ export interface Env {
 }
 
 export default {
-    async fetch(request, env): Promise<Response> {
-
+    async fetch(request, env, ctx): Promise<Response> {
+	
 	const { url } = request;
 
 	console.log(url);
 
 	//  https://developers.cloudflare.com/workers/examples/read-post/
+	
 	async function readRequestBody(request: Request) {
 	    const contentType = request.headers.get("content-type");
 	    if (contentType.includes("application/json")) {
@@ -63,7 +94,7 @@ export default {
 	};
 
 	const url_req = new URL(request.url);
-	
+
 	if (request.method === "OPTIONS") {
 	    
             // Handle CORS preflight requests
@@ -81,17 +112,19 @@ export default {
 
 	    const reqBody = await readRequestBody(request);
 
-	    console.log(reqBody);
-	    
-	    
+	    const name = deduce_name(reqBody["prompt"]);
+
+	    const history = deduce_history(name);
+	
+	    console.log(name)
+
+	    padded_prompt = `My name is ${name}. Here is my long-term history (full history within upcoming brackets): ( ${history} ). ${reqBody["prompt"]}`
+
 	    const response = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-		prompt: reqBody["prompt"],
+		prompt: padded_prompt,
 	    });
-
-	    console.log(response)
-
 	    
-	    // https://developers.cloudflare.com/workers/examples/cors-header-proxy/	    
+	    console.log(response)
 	    
 	    return new Response(JSON.stringify(response), {
 		headers: corsHeaders
@@ -102,3 +135,56 @@ export default {
 
     }
 }satisfies ExportedHandler<Env>;
+
+
+
+function deduce_name(prompt: string) {
+
+    const name_split = prompt.split("My name is ")
+
+    if (name_split.length > 1) {
+
+	// console.log(name_split)
+
+	//  Store or lookup name.
+
+	const name = name_split[1].split(' ').slice(0, 2).join(" ")
+
+	console.log(name)
+
+	return name
+
+	//  If no history, store new person.
+
+	//  Else concatenate history and send to LLM.
+
+    } else {
+
+	return "anonymous"
+
+    }
+}
+
+
+async function deduce_history(name: string) {
+
+    if (name !== "anonymous") {
+
+	const stub = env.MY_DURABLE_OBJECT.getByName(name);
+	
+	const history_new = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+	    prompt: `Extract facts and history about writer of the following: ${reqBody["prompt"]}`
+	});
+	
+	const history_prev = await stub.lookup_history();
+
+	const history_accumulated = history_new + history_prev;
+	
+    } else {
+
+	const history = "";
+
+    }
+
+    
+}
