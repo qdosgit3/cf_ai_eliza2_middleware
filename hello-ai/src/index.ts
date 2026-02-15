@@ -55,18 +55,19 @@ export default {
 	
 	//  https://developers.cloudflare.com/workers/examples/cors-header-proxy/
 
+	const corsHeaders = {
+	    "Access-Control-Allow-Origin": "*",
+	    "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS",
+	    "Access-Control-Max-Age": "86400",
+	    Allow: "GET, HEAD, POST, OPTIONS",
+	};
+
 	const url_req = new URL(request.url);
 	
 	if (request.method === "OPTIONS") {
 	    
             // Handle CORS preflight requests
 	    
-	    const corsHeaders = {
-		"Access-Control-Allow-Origin": "*",
-		"Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS",
-		"Access-Control-Max-Age": "86400",
-	    };
-
 	    return new Response(null, {
 		headers: {
 		    ...corsHeaders,
@@ -90,10 +91,11 @@ export default {
 	    console.log(response)
 
 	    
-	    // https://developers.cloudflare.com/workers/examples/cors-header-proxy/
+	    // https://developers.cloudflare.com/workers/examples/cors-header-proxy/	    
 	    
-	    
-	    return new Response(JSON.stringify(response));
+	    return new Response(JSON.stringify(response), {
+		headers: corsHeaders
+	    })
 	}
 
 	return Response(url_req);
