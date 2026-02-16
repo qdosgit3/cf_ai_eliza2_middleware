@@ -11,7 +11,8 @@ This repo contains 1 Cloudflare worker, which provides the following functionali
 
 __________
 
-Front-end accessible here: https://cf-ai-eliza2.qdosgit3.workers.dev
+Front-end accessible here:
+https://cf-ai-eliza2.qdosgit3.workers.dev
 
 Based on Cloudflare workers, Llama 3, Typescript.
 
