@@ -143,7 +143,7 @@ export default {
 
 	    const reqBody = await readRequestBody(request);
 
-	    const name = reqBody["name"];
+	    const name = reqBody["username"];
 
 	    console.log(name)
 
