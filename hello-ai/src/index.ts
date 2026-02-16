@@ -157,7 +157,7 @@ export default {
 		messages: [
 		    { 
 			role: "system", 
-			content: "You are a psycologist, so psychoanalyse this. You must use under 50 tokens." 
+			content: "You are a psycologist, so psychoanalyse this. You must be as short as possible." 
 		    },
 		    { 
 			role: "user", 
