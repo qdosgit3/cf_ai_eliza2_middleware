@@ -3,7 +3,7 @@
 The middleware for a modern implementation of the historic ELIZA AI psycologist.
 
 Available here:
-https://cf-ai-thomas.qdosgit3.workers.dev
+https://cf-ai-eliza2.qdosgit3.workers.dev
 
 Based on Cloudflare workers, Llama 3, Typescript.
 
