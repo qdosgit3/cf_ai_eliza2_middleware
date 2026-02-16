@@ -34,6 +34,7 @@ export class MyDurableObjectx extends DurableObject<Env> {
   }
 
     async getFullTable() {
+    // const cursor = this.sql.exec("DELETE FROM kv_store");
     const cursor = this.sql.exec("SELECT * FROM kv_store");
 
     const allRows = cursor.toArray();
@@ -148,12 +149,20 @@ export default {
 
 	    const history = await deduce_history(name, reqBody["prompt"], env, ctx);
 	    
-	    const padded_prompt = `My name is ${name}. Here is my long-term history (full history within upcoming brackets): ( ${history} ). ${reqBody["prompt"]}. You are a psycologist, so please psychoanalyse this. Max 256 tokens, so be short.`
+	    const padded_prompt = `My name is ${name}. Here is my long-term history (full history within upcoming brackets): ( ${history} ). ${reqBody["prompt"]}.`
 
 	    console.log(padded_prompt)
 
 	    const response = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-		prompt: padded_prompt,
+		messages: [
+		    { 
+			role: "system", 
+			content: "You are a psycologist, so please psychoanalyse this. Max 256 tokens, so be short." 
+		    },
+		    { 
+			role: "user", 
+			content: padded_prompt
+		    }]
 	    });
 	    
 	    console.log(response)
@@ -211,23 +220,32 @@ async function deduce_history(name: string, prompt: string, env, ctx) {
 	
 	const [history_new, history_prev] = await Promise.all([
 	    env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-		prompt: `Extract all facts (even if insignificant) and history about writer of the following, keep response as short as possible, zero tokens is there are none: ${prompt}`
+		messages: [
+		    { 
+			role: "system", 
+			content: "You only extract information. Extract all facts provided, or if there are none, say: 'MATCH_NOT_FOUND'." 
+		    },
+		    { 
+			role: "user", 
+			content: `${prompt}` 
+		    }]
 	    }),
 	    stub.get(name)
 	])
 	
-	console.log(history_new, history_prev)
+	console.log("history1", history_new["response"], "history2", history_prev)
 
 	let history_accumulated = '';
 
-	if (!history_prev) {
-	    
-	    history_accumulated = history_new;
+	if (history_new["response"].includes( "MATCH_NOT_FOUND") === false) {
 
+	    history_accumulated = history_new["response"];
 
-	} else {
+	}
 
-	    history_accumulated = history_new + history_prev;
+	if (history_prev) {
+
+	    history_accumulated = history_accumulated + history_prev;
 	    
 	}
 
