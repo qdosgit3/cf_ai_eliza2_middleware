@@ -143,7 +143,7 @@ export default {
 
 	    const reqBody = await readRequestBody(request);
 
-	    const name = deduce_name(reqBody["prompt"]);
+	    const name = reqBody["name"];
 
 	    console.log(name)
 
@@ -157,7 +157,7 @@ export default {
 		messages: [
 		    { 
 			role: "system", 
-			content: "You are a psycologist, so please psychoanalyse this. Max 256 tokens, so be short." 
+			content: "You are a psycologist, so psychoanalyse this. You must use under 50 tokens." 
 		    },
 		    { 
 			role: "user", 
@@ -176,34 +176,6 @@ export default {
 
     }
 }satisfies ExportedHandler<Env>;
-
-
-function deduce_name(prompt: string) {
-
-    const name_split = prompt.split("My name is ")
-
-    if (name_split.length > 1) {
-
-	// console.log(name_split)
-
-	//  Store or lookup name.
-
-	const name = name_split[1].split(' ').slice(0, 2).join(" ")
-
-	console.log(name)
-
-	return name
-
-	//  If no history, store new person.
-
-	//  Else concatenate history and send to LLM.
-
-    } else {
-
-	return "anonymous"
-
-    }
-}
 
 
 async function deduce_history(name: string, prompt: string, env, ctx) {
